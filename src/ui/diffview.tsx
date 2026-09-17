@@ -3,7 +3,7 @@
 import { Box, Text } from 'ink'
 import { useMemo } from 'react'
 import type { ComponentRef, JSX, RefObject } from 'react'
-import type { FileDiff, FileStatus, Line, ReviewComment } from '../git/types.js'
+import type { FileDiff, FileStatus, Line, ReviewComment } from '../services/git/index.js'
 import { CommentCard } from './commentcard.js'
 import type { ViewMode } from './keymap.js'
 import { theme } from './theme.js'

@@ -2,7 +2,7 @@
 
 import { Box, Text } from 'ink'
 import type { ComponentRef, JSX, RefObject } from 'react'
-import type { FileDiff, FileStatus } from '../git/types.js'
+import type { FileDiff, FileStatus } from '../services/git/index.js'
 import { theme } from './theme.js'
 import { windowOf } from './viewport.js'
 

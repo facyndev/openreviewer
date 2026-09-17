@@ -3,6 +3,8 @@
 export type Pane = 'tree' | 'diff'
 export type ViewMode = 'unified' | 'side-by-side'
 
+import type { FileDiff } from '../services/git/index.js'
+
 export type Action =
   | { kind: 'move_up' }
   | { kind: 'move_down' }
@@ -24,6 +26,12 @@ export type Action =
       treeVisibleRows: number
       diffVisibleRows: number
       diffVisibleCols: number
+    }
+  | {
+      kind: 'reload_diff'
+      files: FileDiff[]
+      branch?: string
+      commitHash?: string
     }
 
 export interface KeyFlags {

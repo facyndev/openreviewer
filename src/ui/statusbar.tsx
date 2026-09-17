@@ -10,13 +10,15 @@ export function StatusBar({
   viewMode,
   fileCount,
   selectedFile,
-  commitHash = 'a8f492b',
+  branch,
+  commitHash,
   scroll,
 }: {
   pane: Pane
   viewMode: ViewMode
   fileCount: number
   selectedFile?: number
+  branch?: string
   commitHash?: string
   scroll?: string
 }): JSX.Element {
@@ -40,7 +42,7 @@ export function StatusBar({
       overflow="hidden"
     >
       {/* Left side: NORMAL mode badge, view mode, file progress, visual progress bar */}
-      <Box flexDirection="row" flexShrink={0}>
+      <Box flexDirection="row" flexShrink={1} overflow="hidden">
         <Text bold color={theme.bg} backgroundColor={theme.accent}>
           {' NORMAL '}
         </Text>
@@ -50,10 +52,10 @@ export function StatusBar({
         </Text>
         <Text color={theme.textMuted}>
           {' '}
-          {currentIndex}/{fileCount} files · {percent}% reviewed{' '}
+          {currentIndex}/{fileCount} files · {percent}%{' '}
         </Text>
         <Text color={theme.accent}>{progressBar}</Text>
-        {scroll ? <Text color={theme.textMuted}> scroll {scroll}</Text> : null}
+        {scroll ? <Text color={theme.textMuted}> {scroll}</Text> : null}
       </Box>
 
       {/* Center: Navigation shortcuts matching screenshot */}
@@ -68,11 +70,27 @@ export function StatusBar({
         </Text>
       </Box>
 
-      {/* Right side: Encoding, Git SHA, Quit */}
+      {/* Right side: Encoding, Git branch / SHA, Quit */}
       <Box flexDirection="row" flexShrink={0}>
-        <Text color={theme.textMuted}>UTF-8 | </Text>
-        <Text color={theme.added}>{commitHash} </Text>
-        <Text color={theme.textMuted}>| </Text>
+        <Text color={theme.textMuted}>UTF-8</Text>
+        {branch || commitHash ? (
+          <>
+            <Text color={theme.textMuted}> | </Text>
+            {branch && commitHash ? (
+              <>
+                <Text color={theme.accent}>{branch}</Text>
+                <Text color={theme.textMuted}> (</Text>
+                <Text color={theme.added}>{commitHash}</Text>
+                <Text color={theme.textMuted}>)</Text>
+              </>
+            ) : branch ? (
+              <Text color={theme.accent}>{branch}</Text>
+            ) : (
+              <Text color={theme.added}>{commitHash}</Text>
+            )}
+          </>
+        ) : null}
+        <Text color={theme.textMuted}> | </Text>
         <Text color={theme.accent}>q</Text>
         <Text color={theme.textMuted}> quit</Text>
       </Box>

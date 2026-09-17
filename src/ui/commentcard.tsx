@@ -2,7 +2,7 @@
 
 import type { JSX } from 'react'
 import { Box, Text } from 'ink'
-import type { ReviewComment } from '../git/types.js'
+import type { ReviewComment } from '../services/git/index.js'
 import { theme } from './theme.js'
 
 export function CommentCard({

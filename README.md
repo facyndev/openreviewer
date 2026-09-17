@@ -1,49 +1,64 @@
-# OpenReviewer
+# openreviewer
 
-> A terminal-native code review tool that brings clarity to every diff — whether the author is a human or an AI agent.
+Terminal-native code review tool that inspects git diffs with side-by-side navigation, live repository watching, and support for all staged, unstaged, and untracked changes.
 
 ## Quick start
 
-Requirements: Node.js >= 20.
+Node.js >= 20 is required.
 
-```sh
-npm install
-npm run build
-# from inside any git repository:
-npm run dev -- --diff HEAD~3..HEAD
-# or open the default working-tree diff (staged and unstaged):
-npm run dev
-```
+1. Install dependencies:
+   ```sh
+   npm install
+   ```
+2. Build the project:
+   ```sh
+   npm run build
+   ```
+3. Launch the review interface inside any git repository:
+   ```sh
+   # review working tree changes (staged, unstaged, and untracked):
+   npm run dev
 
-Once the TUI is open:
+   # or review a specific commit range:
+   npm run dev -- --diff HEAD~3..HEAD
+   ```
 
-| Key       | Action                      |
-| --------- | --------------------------- |
-| `j` / `k` | Move up/down in the file tree |
-| `h` / `l` | Switch between tree and diff panes |
-| `Enter`   | Open the selected file's diff |
-| `Tab`     | Toggle side-by-side / unified (side-by-side lands in a later phase) |
-| `?`       | Help overlay                |
-| `q`       | Quit                        |
+## Key bindings
 
-## Refs syntax
+| Key | Action |
+| --- | --- |
+| `j` / `k` | Navigate files or scroll diff rows down/up |
+| `h` / `l` | Switch between file tree and diff view |
+| `Enter` | Focus diff view for selected file |
+| `Tab` | Toggle side-by-side and unified diff layout |
+| `?` | Toggle help modal overlay |
+| `q` | Exit application |
 
-- `--diff <a..b>` — review the range between two refs (commits, branches, tags).
-- `--from <ref>` / `--to <ref>` — the missing side defaults to `HEAD`.
-- No flag — `git diff HEAD` (working tree, staged and unstaged).
+## Diff modes and syntax
 
-## Principles
+| Option | Behavior |
+| --- | --- |
+| `(no flags)` | Default mode. Inspects working tree changes against HEAD (staged, unstaged, and untracked files). |
+| `--diff <a..b>` | Compares commit ranges, branch names, or tags. |
+| `--from <ref>` | Compares specified reference against HEAD. |
+| `--to <ref>` | Compares HEAD against specified reference. |
 
-- Git is the truth: OpenReviewer only reads the repository, never modifies it.
-- Offline-first: diff viewing works fully offline; AI review is additive.
-- CLI-first, TUI-second: every TUI action is reachable from the CLI for scripting.
+## Core principles
+
+| Area | Principle |
+| --- | --- |
+| Single source of truth | Git process execution drives all repository state; the tool is strictly read-only. |
+| Clean architecture | Domain contracts live in ports (`GitService`), decoupled from UI components and concrete adapters. |
+| Real-time watcher | File changes debounce and trigger live UI reloads without losing tree selection or diff scroll state. |
+| Offline first | Core navigation and diff visualization never depend on external network services. |
 
 ## Development
 
-```sh
-npm test        # vitest (unit + git integration)
-npm run typecheck
-npm run lint
-```
+Run tests and quality checks from the project root:
 
-Run tests against the pipeline: `npx vitest run src/git src/cli src/ui`.
+```sh
+npm test              # runs vitest unit and integration suite
+npm run typecheck     # verifies typescript types
+npm run lint          # runs eslint checks
+npm run build         # compiles typescript to dist
+```

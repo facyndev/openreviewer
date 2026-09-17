@@ -35,10 +35,16 @@ function mapFile(section: string, file: File): FileDiff {
   const hunks: Hunk[] = file.chunks.map(mapChunk)
   return {
     status: statusOf(section, file),
-    oldPath: file.from ?? '',
-    newPath: file.to ?? '',
+    oldPath: normalizePath(file.from),
+    newPath: normalizePath(file.to),
     hunks,
   }
+}
+
+/** Strips the /dev/null sentinel that git uses for added/deleted files. */
+function normalizePath(raw: string | undefined): string {
+  if (!raw || raw === '/dev/null') return ''
+  return raw
 }
 
 function statusOf(section: string, file: File): FileStatus {

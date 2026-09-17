@@ -67,10 +67,16 @@ openreviewer/
 │   │   ├── statusbar/          # Bottom status bar
 │   │   ├── commandbar/         # Command palette / search bar
 │   │   └── dialog/             # Modal dialogs (confirm, input, etc.)
-│   ├── git/                    # Git operations abstraction
-│   │   ├── diff.ts             # Diff parsing and representation
-│   │   ├── repo.ts             # Repository operations (log, refs, blame)
-│   │   └── types.ts            # Domain types (Hunk, FileDiff, etc.)
+│   ├── services/               # Domain & infrastructure services (Clean Architecture)
+│   │   ├── git/                # Git service port & adapters
+│   │   │   ├── index.ts        # Public Git service entry point
+│   │   │   ├── service.ts      # GitService implementation
+│   │   │   ├── watcher.ts      # Real-time repository watcher
+│   │   │   ├── diff.ts         # Diff retrieval & pipeline
+│   │   │   ├── repo.ts         # Repository operations & low-level execution
+│   │   │   ├── parser.ts       # Unified diff parsing
+│   │   │   └── types.ts        # Domain types (Hunk, FileDiff, GitService, etc.)
+│   │   └── index.ts            # Services root entry point
 │   ├── review/                 # Review engine
 │   │   ├── engine.ts           # Orchestrates AI calls, builds prompts
 │   │   ├── prompt.ts           # Prompt templates for different review modes
@@ -99,11 +105,12 @@ openreviewer/
 
 ### Key Design Principles
 
-1. **Provider as a Plugin**: The `Provider` interface is the only contract AI adapters implement. Adding a new provider means one file, zero changes elsewhere.
-2. **Git is the Truth**: All change data comes from Git. OpenReviewer never modifies the repository — it is strictly read-only.
-3. **Offline-First**: The tool works fully offline for diff viewing. AI features are additive, never required.
-4. **Composable UI**: Each TUI component is a standalone Ink component. Components communicate through state/events, never direct references.
-5. **CLI-First, TUI-Second**: Every action available in the TUI must also be accessible via CLI flags for scripting and CI pipelines.
+1. **Clean Architecture & Ports/Adapters**: The system strictly follows Clean Architecture. UI components and application logic depend on domain abstractions and service interfaces (`GitService`, `Provider`, `SessionStore`), never on direct child process spawns, filesystem details, or external APIs. Concrete adapters are injected at the composition root (CLI entry point).
+2. **Provider as a Plugin**: The `Provider` interface is the only contract AI adapters implement. Adding a new provider means one file, zero changes elsewhere.
+3. **Git is the Truth**: All change data comes from Git. OpenReviewer never modifies the repository — it is strictly read-only.
+4. **Offline-First**: The tool works fully offline for diff viewing. AI features are additive, never required.
+5. **Composable UI**: Each TUI component is a standalone Ink component. Components communicate through state/events, never direct references.
+6. **CLI-First, TUI-Second**: Every action available in the TUI must also be accessible via CLI flags for scripting and CI pipelines.
 
 ## Conventions
 
@@ -167,12 +174,6 @@ export interface Provider {
 | `q`         | Quit                            |
 
 ## Development Roadmap
-
-### Phase 1 — Foundation
-- [ ] Project scaffolding (Node.js + TypeScript package, directory structure).
-- [ ] Git diff parsing and domain types.
-- [ ] Basic TUI: file tree + unified diff viewer.
-- [ ] Navigation and key bindings.
 
 ### Phase 2 — AI Integration
 - [ ] Provider interface and registry.
