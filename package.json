@@ -1,0 +1,36 @@
+{
+  "name": "openreviewer",
+  "version": "0.1.0",
+  "description": "Terminal-native code review tool for human and AI-authored diffs",
+  "type": "module",
+  "bin": {
+    "openreviewer": "bin/openreviewer"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "dev": "tsx src/cli/main.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "parse-diff": "^0.11.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.0"
+  }
+}
