@@ -31,6 +31,16 @@ export interface FileDiff {
 
 export type DiffResult = { files: FileDiff[] }
 
+export interface ReviewComment {
+  id: string
+  filePath: string
+  line?: number
+  author: string
+  timeAgo: string
+  status: 'pending' | 'resolved'
+  text: string
+}
+
 export type GitErrorCode = 'NOT_A_REPO' | 'GIT_FAILED'
 export class GitError extends Error {
   constructor(readonly code: GitErrorCode, message: string) {
