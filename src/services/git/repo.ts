@@ -1,12 +1,46 @@
-/** Repository operations: root resolution via git rev-parse (REQ-3). */
+/** Repository operations: root resolution and head info via git (REQ-3). */
 
 import { spawn } from 'node:child_process'
 import { resolve as resolvePath } from 'node:path'
-import { GitError } from './types.js'
+import { GitError, type HeadInfo } from './types.js'
 
 export async function resolveRoot(cwd: string = process.cwd()): Promise<string> {
   const out = await runGit(['rev-parse', '--show-toplevel'], cwd)
   return resolvePath(out.trim())
+}
+
+export async function getHeadInfo(cwd: string = process.cwd()): Promise<HeadInfo> {
+  const root = await resolveRoot(cwd)
+
+  let branch = ''
+  try {
+    const branchOut = await runGit(['branch', '--show-current'], root)
+    branch = branchOut.trim()
+  } catch {
+    // Ignore error
+  }
+
+  if (!branch) {
+    try {
+      const abbrevOut = await runGit(['rev-parse', '--abbrev-ref', 'HEAD'], root)
+      const abbrev = abbrevOut.trim()
+      if (abbrev) {
+        branch = abbrev
+      }
+    } catch {
+      // Ignore error
+    }
+  }
+
+  let commitHash = ''
+  try {
+    const hashOut = await runGit(['rev-parse', '--short', 'HEAD'], root)
+    commitHash = hashOut.trim()
+  } catch {
+    // Ignore error
+  }
+
+  return { branch, commitHash }
 }
 
 export function runGit(args: string[], cwd: string): Promise<string> {

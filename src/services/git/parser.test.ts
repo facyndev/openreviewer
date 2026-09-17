@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { parseDiff } from './parser.js'
 
 function fixture(name: string): string {
-  return readFileSync(new URL(`../../tests/fixtures/${name}`, import.meta.url), 'utf8')
+  return readFileSync(new URL(`../../../tests/fixtures/${name}`, import.meta.url), 'utf8')
 }
 
 describe('parseDiff golden fixtures', () => {

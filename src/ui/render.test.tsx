@@ -1,6 +1,6 @@
 import { renderToString } from 'ink'
 import { describe, expect, it } from 'vitest'
-import type { FileDiff } from '../git/types.js'
+import type { FileDiff } from '../services/git/index.js'
 import { App } from './app.js'
 
 const files: FileDiff[] = [

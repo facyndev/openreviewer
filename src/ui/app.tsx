@@ -3,7 +3,7 @@
 import { useEffect, useReducer } from 'react'
 import type { ComponentRef, JSX } from 'react'
 import { Box, Text, useApp, useInput, useWindowSize } from 'ink'
-import type { FileDiff, ReviewComment } from '../git/types.js'
+import type { FileDiff, GitService, RepoWatcher, ReviewComment } from '../services/git/index.js'
 import type { Action, Pane, ViewMode } from './keymap.js'
 import { mapKey } from './keymap.js'
 import { DiffView } from './diffview.js'
@@ -26,6 +26,8 @@ export interface AppState {
   treeVisibleRows: number
   diffVisibleRows: number
   diffVisibleCols: number
+  branch?: string
+  commitHash?: string
 }
 
 /** Box DOM node type used by the scroll-container refs. */
@@ -48,6 +50,8 @@ export function createInitialState(
   files: FileDiff[],
   initialComments: ReviewComment[] = [],
   initialViewMode: ViewMode = 'side-by-side',
+  branch?: string,
+  commitHash?: string,
 ): AppState {
   return {
     files,
@@ -62,6 +66,8 @@ export function createInitialState(
     treeVisibleRows: DEFAULT_TREE_ROWS,
     diffVisibleRows: DEFAULT_DIFF_ROWS,
     diffVisibleCols: DEFAULT_DIFF_COLS,
+    branch,
+    commitHash,
   }
 }
 
@@ -297,6 +303,41 @@ export function reducer(state: AppState, action: Action): AppState {
           action.diffVisibleRows,
         ),
       }
+    case 'reload_diff': {
+      const oldSelectedFile = state.files[state.selectedFile]
+      let newSelectedIndex = 0
+
+      if (oldSelectedFile && action.files.length > 0) {
+        const matchedIndex = action.files.findIndex(
+          (f) => f.newPath === oldSelectedFile.newPath,
+        )
+        if (matchedIndex >= 0) {
+          newSelectedIndex = matchedIndex
+        } else {
+          newSelectedIndex = clampSelection(state.selectedFile, action.files.length)
+        }
+      }
+
+      const totalRows = totalRowsOf(action.files, newSelectedIndex, state.viewMode)
+      const maxDiffOffset = Math.max(0, totalRows - state.diffVisibleRows)
+      const clampedDiffOffset = Math.min(state.diffOffset, maxDiffOffset)
+
+      const clampedTreeOffset = clampOffset(
+        state.treeOffset,
+        action.files.length,
+        state.treeVisibleRows,
+      )
+
+      return {
+        ...state,
+        files: action.files,
+        branch: action.branch ?? state.branch,
+        commitHash: action.commitHash ?? state.commitHash,
+        selectedFile: newSelectedIndex,
+        diffOffset: clampedDiffOffset,
+        treeOffset: clampedTreeOffset,
+      }
+    }
     default:
       return state
   }
@@ -341,15 +382,21 @@ export function App({
   files,
   initialComments = [],
   initialViewMode = 'side-by-side',
+  branch,
+  commitHash,
+  gitService,
 }: {
   files: FileDiff[]
   initialComments?: ReviewComment[]
   initialViewMode?: ViewMode
+  branch?: string
+  commitHash?: string
+  gitService?: GitService
 }): JSX.Element {
   const [state, dispatch] = useReducer(
     reducer,
     files,
-    (f) => createInitialState(f, initialComments, initialViewMode),
+    (f) => createInitialState(f, initialComments, initialViewMode, branch, commitHash),
   )
   const { exit } = useApp()
   const { columns, rows } = useWindowSize()
@@ -370,6 +417,47 @@ export function App({
       diffVisibleCols,
     })
   }, [hasSize, treeVisibleRows, diffVisibleRows, diffVisibleCols])
+
+  useEffect(() => {
+    if (!gitService) return
+    let activeWatcher: RepoWatcher | null = null
+    let mounted = true
+
+    gitService
+      .watch(async () => {
+        if (!mounted) return
+        try {
+          const [diff, head] = await Promise.all([
+            gitService.getDiff(),
+            gitService.getHeadInfo().catch(() => ({ branch: '', commitHash: '' })),
+          ])
+          if (!mounted) return
+          dispatch({
+            kind: 'reload_diff',
+            files: diff.files,
+            branch: head.branch,
+            commitHash: head.commitHash,
+          })
+        } catch {
+          // ignore transient watcher errors
+        }
+      })
+      .then((w) => {
+        if (!mounted) {
+          w.stop()
+        } else {
+          activeWatcher = w
+        }
+      })
+      .catch(() => {
+        // ignore watcher initialization failure
+      })
+
+    return () => {
+      mounted = false
+      activeWatcher?.stop()
+    }
+  }, [gitService])
 
   useInput(
     (input, key) => {
@@ -458,6 +546,8 @@ export function App({
         fileCount={state.files.length}
         selectedFile={state.pane === 'tree' ? state.selectedFile : undefined}
         scroll={scrollLabel}
+        branch={state.branch ?? branch}
+        commitHash={state.commitHash ?? commitHash}
       />
     </Box>
   )

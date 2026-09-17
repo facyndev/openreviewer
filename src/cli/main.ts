@@ -1,10 +1,7 @@
-/** CLI entry point: parse, validate, load repo, render the TUI (REQ-1, REQ-2). */
-
 import { render } from 'ink'
 import { createElement } from 'react'
 import { ArgError, parseArgs } from './args.js'
-import { fetchDiff } from '../git/diff.js'
-import { GitError } from '../git/types.js'
+import { createGitService, GitError, type GitService } from '../services/git/index.js'
 import { App } from '../ui/app.js'
 
 const USAGE = `usage: openreviewer [--diff <a..b> | --from <ref> | --to <ref>] [--help]
@@ -19,7 +16,10 @@ function fail(message: string): never {
   process.exit(1)
 }
 
-export async function main(argv: string[]): Promise<void> {
+export async function main(
+  argv: string[],
+  service: GitService = createGitService(),
+): Promise<void> {
   let parsed
   try {
     parsed = parseArgs(argv)
@@ -34,15 +34,28 @@ export async function main(argv: string[]): Promise<void> {
     return
   }
   let diff
+  let head = { branch: '', commitHash: '' }
   try {
-    diff = await fetchDiff(parsed.range)
+    const [fetchedDiff, fetchedHead] = await Promise.all([
+      service.getDiff(parsed.range),
+      service.getHeadInfo().catch(() => ({ branch: '', commitHash: '' })),
+    ])
+    diff = fetchedDiff
+    head = fetchedHead
   } catch (err) {
     if (err instanceof GitError) {
       fail(err.message)
     }
     throw err
   }
-  const instance = render(createElement(App, { files: diff.files }))
+  const instance = render(
+    createElement(App, {
+      files: diff.files,
+      branch: head.branch,
+      commitHash: head.commitHash,
+      gitService: service,
+    }),
+  )
   await instance.waitUntilExit()
   process.exit(0)
 }

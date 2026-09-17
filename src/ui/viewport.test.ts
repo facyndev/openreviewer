@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Hunk, Line } from '../git/types.js'
+import type { Hunk, Line } from '../services/git/index.js'
 import {
   clampOffset,
   flattenDiffRows,

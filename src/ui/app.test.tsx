@@ -1,6 +1,6 @@
 import { cleanup, render } from 'ink-testing-library'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { FileDiff } from '../git/types.js'
+import type { FileDiff } from '../services/git/index.js'
 import { App, createInitialState, reducer, type AppState } from './app.js'
 
 function file(diff: Partial<FileDiff> = {}): FileDiff {
@@ -62,6 +62,39 @@ describe('reducer (REQ-8 state)', () => {
     expect(s.pane).toBe('tree')
     s = reducer(s, { kind: 'switch_pane' })
     expect(s.pane).toBe('diff')
+  })
+
+  it('preserves selected file by newPath on reload_diff', () => {
+    let s = createInitialState(files)
+    s = reducer(s, { kind: 'move_down' })
+    expect(s.selectedFile).toBe(1)
+    expect(s.files[s.selectedFile]?.newPath).toBe('a.ts')
+
+    const reordered: FileDiff[] = [
+      file({ status: 'modified', newPath: 'a.ts' }),
+      file({ status: 'added', newPath: 'new.ts' }),
+    ]
+    s = reducer(s, {
+      kind: 'reload_diff',
+      files: reordered,
+      branch: 'feat/live',
+      commitHash: 'abcdef1',
+    })
+    expect(s.selectedFile).toBe(0)
+    expect(s.files[s.selectedFile]?.newPath).toBe('a.ts')
+    expect(s.branch).toBe('feat/live')
+    expect(s.commitHash).toBe('abcdef1')
+  })
+
+  it('clamps selection if selected file was removed on reload_diff', () => {
+    let s = createInitialState(files)
+    s = reducer(s, { kind: 'move_down' })
+    s = reducer(s, { kind: 'move_down' })
+    expect(s.selectedFile).toBe(2)
+
+    const single: FileDiff[] = [file({ status: 'added', newPath: 'new.ts' })]
+    s = reducer(s, { kind: 'reload_diff', files: single })
+    expect(s.selectedFile).toBe(0)
   })
 })
 
@@ -210,7 +243,7 @@ describe('reducer viewport scrolling (REQ-9)', () => {
   })
 
   it('initializes in unified mode when requested', () => {
-    let s: AppState = { ...createInitialState([diffFile], [], 'unified'), pane: 'diff', diffVisibleRows: 2 }
+    const s: AppState = { ...createInitialState([diffFile], [], 'unified'), pane: 'diff', diffVisibleRows: 2 }
     expect(s.viewMode).toBe('unified')
   })
 })
@@ -222,6 +255,14 @@ describe('App rendering', () => {
     expect(frame).toContain('openreviewer')
     expect(frame).toContain('FILES CHANGED')
     expect(frame).toContain('NORMAL')
+  })
+
+  it('renders dynamic branch and commit hash in the status bar', () => {
+    const { lastFrame } = render(
+      <App files={files} branch="feature/review" commitHash="c072ea4" />,
+    )
+    const frame = lastFrame() ?? ''
+    expect(frame).toContain('feature/review (c072ea4)')
   })
 
   it('toggles the help overlay on ? keypress and hides other chrome', async () => {

@@ -1,6 +1,6 @@
 /** Pure viewport math for clipped, scrollable panes (no React, no Ink). */
 
-import type { FileDiff, Hunk, Line } from '../git/types.js'
+import type { FileDiff, Hunk, Line } from '../services/git/index.js'
 import type { ViewMode } from './keymap.js'
 
 /** Clamp a window offset so a window of `size` over `total` stays in range. */

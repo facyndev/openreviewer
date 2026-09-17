@@ -6,3 +6,5 @@ coverage/
 .agents/
 skills-lock.json
 .codegraph/
+.pi/
+pnpm-lock.yaml
