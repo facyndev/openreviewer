@@ -1,8 +1,11 @@
-/** CLI entry point: parse, validate, load repo, fetch diff (REQ-1 part: pre-TUI slice). */
+/** CLI entry point: parse, validate, load repo, render the TUI (REQ-1, REQ-2). */
 
+import { render } from 'ink'
+import { createElement } from 'react'
 import { ArgError, parseArgs } from './args.js'
 import { fetchDiff } from '../git/diff.js'
 import { GitError } from '../git/types.js'
+import { App } from '../ui/app.js'
 
 const USAGE = `usage: openreviewer [--diff <a..b> | --from <ref> | --to <ref>] [--help]
   --diff <a..b>   review the diff between refs a and b
@@ -30,15 +33,18 @@ export async function main(argv: string[]): Promise<void> {
     process.stdout.write(USAGE)
     return
   }
+  let diff
   try {
-    const diff = await fetchDiff(parsed.range)
-    process.stdout.write(`${JSON.stringify({ files: diff.files.map((f) => f.newPath || f.oldPath) })}\n`)
+    diff = await fetchDiff(parsed.range)
   } catch (err) {
     if (err instanceof GitError) {
       fail(err.message)
     }
     throw err
   }
+  const instance = render(createElement(App, { files: diff.files }))
+  await instance.waitUntilExit()
+  process.exit(0)
 }
 
 if (process.argv[1] && /openreviewer|main\.(ts|js)$/.test(process.argv[1])) {
