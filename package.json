@@ -22,11 +22,16 @@
     "node": ">=20"
   },
   "dependencies": {
-    "parse-diff": "^0.11.1"
+    "@types/react": "^19.3.0",
+    "ink": "^7.1.1",
+    "parse-diff": "^0.11.1",
+    "react": "^19.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/react-test-renderer": "^19.3.0",
     "eslint": "^9.17.0",
+    "ink-testing-library": "^4.0.0",
     "prettier": "^3.4.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
