@@ -1,0 +1,11 @@
+diff --git a/src/app.ts b/src/app.ts
+index abc1234..def5678 100644
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -1,5 +1,6 @@
+ import { x } from './x'
+-const old = 1
++const added = 1
++const second = 2
+  context line
+ export { x }
